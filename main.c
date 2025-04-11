@@ -42,7 +42,7 @@
 void test_unitaires(void);
 
 volatile union {
-    uint8_t I2C_clientDataArray[I2C_CLIENT_LOCATION_SIZE];
+    uint8_t I2C_clientDataArray[10];
 
     struct {
         uint8_t ident;
@@ -133,7 +133,7 @@ int main(void)
     LEDS_initialize();
     SYSTICK_initialize();
     MTOUCH_Initialize();
-    I2C_client_initialize();
+//    I2C_client_initialize();
 
     DATA_initialize();
 

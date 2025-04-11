@@ -32,12 +32,12 @@
 #define	XC_HEADER_TEMPLATE_H
 
 // TODO Insert C++ class definitions if appropriate
-#define I2C_CLIENT_LOCATION_SIZE 10
-#define I2C_CLIENT_DATA I2C_clientDataArray
+//#define I2C_CLIENT_LOCATION_SIZE 10
+//#define I2C_CLIENT_DATA I2C_clientDataArray
 
 // TODO Insert declarations
 extern bool I2C_stopReceived; 
-extern volatile uint8_t * I2C_clientDataArray;
+//extern volatile uint8_t * I2C_clientDataArray;
 
 // Comment a function and leverage automatic documentation with slash star star
 /**
@@ -63,7 +63,8 @@ extern volatile uint8_t * I2C_clientDataArray;
 // TODO Insert declarations or function prototypes (right here) to leverage 
 // live documentation
 
-void I2C_client_initialize (void);
+//void I2C_client_initialize (void);
+void I2C_client_initialize (uint8_t * clientDataPtr, uint8_t size);
 
 
 

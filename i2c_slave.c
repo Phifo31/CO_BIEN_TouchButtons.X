@@ -19,9 +19,10 @@
 #include "i2c_slave.h"
 
 
+static uint8_t * I2C_clientDataArray;
 static uint8_t clientLocation = 0x00;
+static uint8_t clientDataSize = 0x00;
 static bool isClientLocation = false;
-
 bool I2C_stopReceived = false;
 
 /**
@@ -44,16 +45,16 @@ static bool I2C_client_application(i2c_client_transfer_event_t event) {
                 isClientLocation = false;
                 break;
             } else {
-                I2C_CLIENT_DATA[clientLocation++] = I2C1_Client.ReadByte();
-                if (clientLocation >= I2C_CLIENT_LOCATION_SIZE) {
+                I2C_clientDataArray[clientLocation++] = I2C1_Client.ReadByte();
+                if (clientLocation >= clientDataSize) {
                     clientLocation = 0x00;
                 }
             }
             break;
 
         case I2C_CLIENT_TRANSFER_EVENT_TX_READY: //Provide the Client data requested by the I2C Host
-            I2C1_Client.WriteByte(I2C_CLIENT_DATA[clientLocation++]);
-            if (clientLocation >= I2C_CLIENT_LOCATION_SIZE) {
+            I2C1_Client.WriteByte(I2C_clientDataArray[clientLocation++]);
+            if (clientLocation >= clientDataSize) {
                 clientLocation = 0x00;
             }
             break;
@@ -85,8 +86,11 @@ static bool I2C_client_application(i2c_client_transfer_event_t event) {
     return true;
 }
 
-void I2C_client_initialize (void) {
+void I2C_client_initialize (uint8_t * clientDataPtr, uint8_t size) {
     I2C1_Client.CallbackRegister(I2C_client_application);
+    I2C_clientDataArray = clientDataPtr; 
+    clientLocation = 0x0;
+    clientDataSize = size;
 }
 
 

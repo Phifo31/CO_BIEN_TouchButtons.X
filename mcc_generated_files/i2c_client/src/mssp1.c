@@ -13,7 +13,7 @@
  */
 
 /*
-© [2025] Microchip Technology Inc. and its subsidiaries.
+ï¿½ [2025] Microchip Technology Inc. and its subsidiaries.
 
     Subject to your compliance with these terms, you may use Microchip 
     software and any derivatives exclusively with Microchip products. 
@@ -78,7 +78,7 @@ void I2C1_Initialize(void)
     /* DHEN disabled; AHEN disabled; SBCDE disabled; SDAHT 100ns; BOEN disabled; SCIE disabled; PCIE disabled;  */
     SSP1CON3 = 0x0;
     /* SSPADD 112;  */
-    SSP1ADD = 0x70;
+    SSP1ADD = 0x38;
     /* SSPMSK 254;  */
     SSP1MSK = 0xFE;
     /* Enable Interrupts */

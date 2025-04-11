@@ -9,18 +9,18 @@
  * Tests Hardwares
  *          Led debug                               ==> ok 
  *          Timer, base de temps à 1 milliseconde   ==> ok
- *          Leds adressables                        ==> ?
- *          Affichage avec data streamer            ==> ?     
- *          Boutons tactiles séparés                ==> ?
+ *          Leds adressables                        ==> ok
+ *          Affichage avec data streamer            ==> ok en partie seulement (seul les valeurs configurées sur MCC)     
+ *          Boutons tactiles séparés                ==> ok
  *          Boutons tactiles regroupés              ==> ?
- *          Bouton tactile proximité                ==> ?
+ *          Bouton tactile proximité                ==> ok
  *          Bus I2C esclave                         ==> ?
  * 
  * Tests unitaires
  *          ?                                       ==> ?
  *  *  
  * Tests intégrations
- *          Commande leds par message I2C           ==> ?
+ *          Commande leds par messages I2C          ==> ?
  *          Lecture états boutons tactiles          ==> ?
  *          Configuration boutons tactiles          ==> ?
  * 
@@ -35,6 +35,7 @@
 
 #include "leds.h"
 #include "systick.h"
+#include "i2c_slave.h"
 
 /*!
  * 
@@ -202,14 +203,15 @@ void print_buttons_states(void)
 }
 
 
-mtouch_sensor_sample_t MTOUCH_Sensor_RawSample_Get(enum mtouch_sensor_names name) ;
+mtouch_sensor_sample_t MTOUCH_Sensor_RawSample_Get(enum mtouch_sensor_names name);
 
-void print_sensor_value (void) {
+void print_sensor_value(void)
+{
     mtouch_sensor_sample_t val;
-    
+
     printf("\n");
     for (enum mtouch_button_names name = 0; name < MTOUCH_BUTTONS; name++) {
-        val = MTOUCH_Sensor_RawSample_Get(name); 
+        val = MTOUCH_Sensor_RawSample_Get(name);
         printf("\t %05d", val);
     }
 }
@@ -232,7 +234,6 @@ void testHardware_buttons(void)
     uint32_t time = SYSTICK_read();
     int i = 0;
 
-
     while (1) {
         if (MTOUCH_Service_Mainloop()) {
             // If Touch Tuning  is enabled, touchTuneProcess() need to be called inside MTOUCH_Service_Mainloop branch statement
@@ -252,7 +253,35 @@ void testHardware_buttons(void)
         if (SYSTICK_isOverrun(time)) {
             time += 1000;
             //print_buttons_states();
-         //   print_sensor_value ();
+            //   print_sensor_value ();
+        }
+    }
+}
+
+
+uint8_t i2c_data [10];
+
+void testHardware_i2cSlave(void)
+{
+    SYSTEM_Initialize();
+    SYSTICK_initialize();
+    TRISCbits.TRISC5 = 0;
+
+    INTERRUPT_GlobalInterruptEnable();
+    INTERRUPT_PeripheralInterruptEnable();
+
+    uint32_t time = SYSTICK_read();
+
+    I2C_client_initialize(i2c_data, 2);
+
+    while (1) {
+        if (SYSTICK_isOverrun(time)) {
+            time += 1000;
+            if (i2c_data[0] == 0x01) {
+                PORTCbits.RC5 = 0;
+            } else {
+                PORTCbits.RC5 = 1;
+            }
         }
     }
 }
@@ -262,9 +291,10 @@ void test_unitaires(void)
     //testHardware_ledDebug ();
     //testHardware_sysTick ();
     //testHardware_ledsAdressables ();
-    testDriver_ledsAdressables();
+    //testDriver_ledsAdressables();
     //testHardware_uart();
     //testHardware_buttons();
+    testHardware_i2cSlave();
 }
 // End of file 
 
