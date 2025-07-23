@@ -33,9 +33,13 @@
 #include "mcc_generated_files/system/system.h"
 #include "mcc_generated_files/touch/mtouch.h"
 
+#include "../Common/common_data.h"
 #include "leds.h"
 #include "systick.h"
 #include "i2c_slave.h"
+
+
+extern volatile I2C_data_t I2C_data;
 
 /*!
  * 
@@ -46,9 +50,9 @@ void testHardware_ledDebug(void)
     TRISCbits.TRISC5 = 0;
 
     while (1) {
-        PORTCbits.RC5 = 0;
+        PORTCbits.RC5 = 0; // = led debug on
         __delay_ms(50);
-        PORTCbits.RC5 = 1;
+        PORTCbits.RC5 = 1; // = led debug off
         __delay_ms(450);
     }
 }
@@ -64,18 +68,18 @@ void testHardware_sysTick(void)
 
     uint32_t update = SYSTICK_read();
     while (1) {
-        PORTCbits.RC5 = 0;
+        PORTCbits.RC5 = 0; // = led debug on
         update += 50;
-        while (SYSTICK_isOverrun(update));
+        while (!SYSTICK_isOverrun(update));
 
-        PORTCbits.RC5 = 1;
+        PORTCbits.RC5 = 1; // = led debug off
         update += 950;
-        while (SYSTICK_isOverrun(update));
+        while (!SYSTICK_isOverrun(update));
     }
 }
 
 
-extern leds_state_t leds_state;
+//extern leds_state_t leds_state;
 
 /**
  * Test du 18/03/2025
@@ -87,7 +91,11 @@ extern leds_state_t leds_state;
  *
  *              SCK & SDO       ==> Ok
  * En final, les configs fonctionnement (mais il faut ajouter une pull-up sur la 
- * première leds pour passer de 3v3 à 5V avec un collecteur ouvert 
+ * première leds pour passer de 3v3 à 5V avec un collecteur ouvert)
+ * 
+ * retour du 22/05 : demontage par erreur de la resistance (avec 1K ça ne fonctionne pas, avec 120R non plus)
+ * Quelle était la valeur ?
+ *  
  *              
  */
 void testHardware_ledsAdressables(void)
@@ -95,11 +103,13 @@ void testHardware_ledsAdressables(void)
     SYSTEM_Initialize();
     SYSTICK_initialize();
     LEDS_initialize();
+    TRISCbits.TRISC5 = 0;
 
     INTERRUPT_GlobalInterruptEnable();
     INTERRUPT_PeripheralInterruptEnable();
 
     while (1) {
+        PORTCbits.RC5 = 1; // = led debug off
         SSP2BUF = 0x98; //SPI2TXB = g;
         while (PIR4bits.SSP2IF == 0); // while (!SPI2SPI2STATUSbits.TXBE);
         PIR4bits.SSP2IF = 0;
@@ -111,6 +121,7 @@ void testHardware_ledsAdressables(void)
         PIR4bits.SSP2IF = 0;
         __delay_ms(100);
 
+        PORTCbits.RC5 = 0; // = led debug on
         SSP2BUF = 0x0; //SPI2TXB = g;
         while (PIR4bits.SSP2IF == 0); // while (!SPI2SPI2STATUSbits.TXBE);
         PIR4bits.SSP2IF = 0;
@@ -241,6 +252,7 @@ void testHardware_buttons(void)
             //touchTuneProcess();
             /* Button API*/
             if (MTOUCH_Button_isPressed(0)) {
+                
                 /* process if button is pressed */
                 /* LED_SetHigh();*/
 
@@ -259,7 +271,7 @@ void testHardware_buttons(void)
 }
 
 
-uint8_t i2c_data [10];
+uint8_t test_i2c_data [10];
 
 void testHardware_i2cSlave(void)
 {
@@ -272,12 +284,12 @@ void testHardware_i2cSlave(void)
 
     uint32_t time = SYSTICK_read();
 
-    I2C_client_initialize(i2c_data, 2);
+    I2C_client_initialize(test_i2c_data, 2);
 
     while (1) {
         if (SYSTICK_isOverrun(time)) {
-            time += 1000;
-            if (i2c_data[0] == 0x01) {
+            time += 20;
+            if (test_i2c_data[0] == 0x01) {
                 PORTCbits.RC5 = 0;
             } else {
                 PORTCbits.RC5 = 1;
@@ -286,15 +298,43 @@ void testHardware_i2cSlave(void)
     }
 }
 
+void I2C_DATA_service_Mainloop(void);
+
+void testDriver_i2cSlave(void)
+{
+    SYSTEM_Initialize();
+    SYSTICK_initialize();
+    LEDS_initialize();
+    //TRISCbits.TRISC5 = 0;
+    MTOUCH_Initialize();
+    I2C_client_initialize(I2C_data.I2C_clientDataArray, sizeof (I2C_data.I2C_clientDataArray));
+    
+    INTERRUPT_GlobalInterruptEnable();
+    INTERRUPT_PeripheralInterruptEnable();
+
+    uint32_t time = SYSTICK_read();
+
+    while (1) {
+        if (SYSTICK_isOverrun(time)) {
+            time += 20;
+            I2C_DATA_service_Mainloop();
+            LEDS_serviceMainLoop();   
+        }
+    }
+}
+
 void test_unitaires(void)
 {
-    //testHardware_ledDebug ();
-    //testHardware_sysTick ();
+    //testHardware_ledDebug (); // La led de debug doit clignoter toutes les 500ms (rapport cyclique 10% - sans le systick)
+    //testHardware_sysTick (); // La led de debug doit clignoter toutes les 1s (rapport cyclique 5% - avec le systick et les interruptions)
     //testHardware_ledsAdressables ();
     //testDriver_ledsAdressables();
     //testHardware_uart();
     //testHardware_buttons();
-    testHardware_i2cSlave();
+    //testHardware_i2cSlave(); // reception et modification de la led de debug
+    //testDriver_i2cSlave();
+
+    while (1) {}    
 }
 // End of file 
 

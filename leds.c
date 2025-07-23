@@ -26,6 +26,8 @@
 #include <stdbool.h>
 
 #include "systick.h"
+
+#include "../Common/common_data.h"
 #include "leds.h"
 
 LEDS_color_t leds [NUM_LEDS];
@@ -193,6 +195,21 @@ static void LEDS_Show(void)
  */
 void LEDS_configure(LEDS_color_t color, uint8_t intensity, LEDS_mode_t mode, uint16_t interval)
 {
+    leds_state.color.blue = color.blue;
+    leds_state.color.red = color.red;
+    leds_state.color.green = color.green;
+    leds_state.intensity = intensity;
+    leds_state.mode = mode;
+    leds_state.togglePeriod = interval;
+}
+
+/**
+ * 
+ * @param mode
+ */
+void userLed_configure(LEDS_mode_t mode)
+{
+    userLed.mode = mode;
 }
 
 void userLedUpdate(void)
@@ -235,11 +252,15 @@ void userLedUpdate(void)
         break;
 
     case ON:
-        PORTCbits.RC5 = 0;
+        //PORTCbits.RC5 = 0;
+        PWM5DCH = 0x7C; // PWMDCH 124
+        PWM5DCL = 0xC0; // PWMDCL 3
         break;
 
     case OFF:
-        PORTCbits.RC5 = 1;
+        //PORTCbits.RC5 = 1;
+        PWM5DCH = USER_LED_MAXPWM; // PWMDCH 124
+        PWM5DCL = 0xC0; // PWMDCL 3
     default:
         break;
     }

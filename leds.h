@@ -12,18 +12,6 @@
 extern "C" {
 #endif
 
-    typedef enum LEDS_MODE {
-        ON,
-        OFF,
-        BLINK,
-        FADING_BLINK
-    } LEDS_mode_t;
-
-    typedef struct LEDS_COLOR {
-        uint8_t red;
-        uint8_t green;
-        uint8_t blue;
-    } LEDS_color_t;
 
     typedef struct LEDS_STRUCT {
         uint8_t *indices; // Indices of LEDs in the group
@@ -80,6 +68,8 @@ extern "C" {
      * 
      */
     //void LEDS_Show(void);
+    
+    void userLed_configure (LEDS_mode_t mode);
 
 
 #ifdef	__cplusplus

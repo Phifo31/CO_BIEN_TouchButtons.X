@@ -31,13 +31,13 @@ void TMR6_ISR(void)
  * Idée de base :   
  * Le systick est basé sur le TIMER0. La configuration et l'interruption est 
  * géré par le MCC.
- * La seule config à ajouter concenrne le callback de l'interruption
+ * La seule config à ajouter concernne le callback de l'interruption
  * ==> Fonctionnement OK
  * 
  * Mais simplification et maitrise de la config sans MCC (problèmatique)
  * recup de la config de TIMER6 pour la génération d'un IT à la milliseconde
  *  
- * Et création de l'interruption (sans passer par le callback) gain d'un appel de fonction
+ * Et création de l'interruption (sans passer par le callback - gain d'un appel de fonction)
  * 
  */
 void SYSTICK_initialize(void) {
@@ -87,6 +87,7 @@ uint32_t SYSTICK_read(void) {
  * 
  * @param t : la valeur à comparer
  * @return : vrai si le systick est superieur au parametre (dépassement)
+ * 
  */
 bool SYSTICK_isOverrun(uint32_t t) {
     uint32_t tmp;
